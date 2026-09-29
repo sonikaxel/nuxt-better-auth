@@ -26,8 +26,6 @@ Most of code in the project is taken from [nuxt-modules/better-auth](http://gith
 - Download `zip` file, extract it, run `pnpm i` and its done.
 - Or, use `git clone --depth 1` to clone latest history and delete `.git` _(important)_.
 
-> **Note:** Before running `pnpm dev` make sure that `NUXT_BETTER_AUTH_SECRET` and `NUXT_DATABASE_URL` is defined in your `.env` file and all migration are performed to database to avoid any errors.
-
 ## Step after installation
 
 1. Create `.env` file in root directory and define `NUXT_BETTER_AUTH_SECRET` and `NUXT_DATABASE_URL`.
