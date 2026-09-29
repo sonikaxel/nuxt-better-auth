@@ -1,0 +1,38 @@
+{
+  "name": "nuxt-better-auth",
+  "type": "module",
+  "private": true,
+  "author": {
+    "name": "SonikAxel",
+    "url": "https://github.com/sonikaxel"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "auth:generate": "pnpm dlx auth@latest generate --config \"./config/auth.ts\" --output \"./config\"",
+    "auth:createAdmin": "pnpm dlx auth@latest create-admin --email admin@example.com --name \"Admin\" --role admin --config \"./config/auth.ts\"",
+    "db:generate": "pnpm exec npx drizzle-kit generate --config=./config/drizzle.config.ts",
+    "db:migrate": "pnpm exec npx drizzle-kit migrate --config=./config/drizzle.config.ts",
+    "db:studio": "pnpm exec npx drizzle-kit studio --config=./config/drizzle.config.ts"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
+    "better-auth": "^1.7.6",
+    "drizzle-orm": "^0.45.3",
+    "nuxt": "^4.5.2",
+    "pg": "^8.23.0",
+    "radix3": "^1.1.2",
+    "ufo": "^1.6.4",
+    "uuid": "^14.0.2",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11"
+  }
+}
