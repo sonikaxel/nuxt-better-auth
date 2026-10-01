@@ -4,21 +4,20 @@ const credentials = ref({
   password: 'password',
 });
 
-const { client } = useUserSession();
-const route = useRoute();
+const signIn = useSignIn();
 
 const handleLogin = async (e: Event) => {
-  const { error } = await client.signIn.email({
+  await signIn('email', {
     ...credentials.value,
+    onError(error) {
+      alert(error.message);
+    },
+    onSuccess(data, redirecting) {
+      if (!redirecting) {
+        navigateTo('/');
+      }
+    },
   });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  // await fetchSession();
-  await navigateTo((route.query.redirect as string | undefined) ?? '/');
 };
 </script>
 

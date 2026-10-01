@@ -15,7 +15,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/register': { auth: { only: 'guest' } },
     '/login': { auth: { only: 'guest' } },
-    '/logout': { auth: { only: 'user' } },
+    '/logout': { auth: { only: 'user', redirectTo: '/login' } },
     '/admin/**': {
       ssr: false,
       auth: {

@@ -7,11 +7,7 @@ import {
   useState,
   watch,
 } from '#imports';
-import type {
-  AppAuthClient,
-  ClientAuthSession,
-  ClientAuthUser,
-} from '../../types';
+import type { ClientAuthSession, ClientAuthUser } from '../../types';
 import {
   isRecord,
   normalizeAuthActionError,
@@ -27,11 +23,6 @@ import { useAuthClient } from './useAuthClient';
 export interface SignOutOptions {
   onSuccess?: () => void | Promise<void>;
 }
-
-type HasPermissionParam = Parameters<
-  AppAuthClient['admin']['hasPermission']
->[0];
-type AuthPermissions = HasPermissionParam['permissions'];
 
 let _signOutPromise: Promise<void> | null = null;
 const _sessionSyncApps = new WeakSet<object>();

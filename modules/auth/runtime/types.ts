@@ -25,12 +25,21 @@ export type ClientAuthSession = Omit<AuthSession, 'token'>;
 /** Client Auth User */
 export type ClientAuthUser = AuthUser;
 
+/** Client Auth User Session */
+export type ClientAuthUserSession = {
+  user: ClientAuthUser;
+  session: ClientAuthSession;
+};
+
+/** Auth Mode */
 export type AuthMode = 'guest' | 'user';
 
 type User = Omit<AuthUser, 'createdAt' | 'updatedAt' | 'banExpires'>;
 
+/** User to match */
 export type MatchAuthUser = UserMatch<User>;
 
+/** Auth Meta */
 export type AuthMeta =
   | false
   | AuthMode
@@ -40,4 +49,5 @@ export type AuthMeta =
       redirectTo?: string;
     };
 
+/** Auth Route Rules */
 export type AuthRouteRules = Record<string, unknown> & { auth?: AuthMeta };
