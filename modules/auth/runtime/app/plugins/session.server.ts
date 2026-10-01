@@ -1,12 +1,13 @@
-import type { ClientAuthSession, ClientAuthUser } from '../../types';
-import { parseJSON } from 'better-auth/client';
 import {
   defineNuxtPlugin,
   useRequestEvent,
   useRequestFetch,
   useState,
 } from '#imports';
+import { parseJSON } from 'better-auth/client';
+import type { ClientAuthSession, ClientAuthUser } from '../../types';
 import { appendSetCookieHeaders } from '../../utils/cookie-headers';
+import { getAPISessionPath } from '../../utils/path';
 
 export default defineNuxtPlugin({
   name: 'auth:session-init',
@@ -24,10 +25,11 @@ export default defineNuxtPlugin({
     const event = useRequestEvent();
     if (event) {
       try {
+        const sessionApiPath = getAPISessionPath();
         const data = await useRequestFetch()<{
           session: ClientAuthSession & { token?: string };
           user: ClientAuthUser;
-        } | null>('/api/auth/get-session', {
+        } | null>(sessionApiPath, {
           parseResponse: parseJSON,
           onResponse({ response }) {
             appendSetCookieHeaders(event, response.headers);

@@ -5,6 +5,7 @@ const credentials = ref({
 });
 
 const { client } = useUserSession();
+const route = useRoute();
 
 const handleLogin = async (e: Event) => {
   const { error } = await client.signIn.email({
@@ -17,7 +18,7 @@ const handleLogin = async (e: Event) => {
   }
 
   // await fetchSession();
-  await navigateTo('/');
+  await navigateTo((route.query.redirect as string | undefined) ?? '/');
 };
 </script>
 

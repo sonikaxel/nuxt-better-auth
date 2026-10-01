@@ -1,4 +1,3 @@
-import authClientConfig from '@/auth.config';
 import {
   computed,
   navigateTo,
@@ -8,8 +7,6 @@ import {
   useState,
   watch,
 } from '#imports';
-import type { BetterAuthClientOptions } from 'better-auth';
-import { createAuthClient } from 'better-auth/vue';
 import type {
   AppAuthClient,
   ClientAuthSession,

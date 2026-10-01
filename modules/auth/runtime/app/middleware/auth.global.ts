@@ -1,6 +1,7 @@
 import { getRouteRules } from '#imports';
 import defu from 'defu';
 import { createRouter, toRouteMatcher } from 'radix3';
+import { withoutBase } from 'ufo';
 import type { ModuleOptionsNormalized } from '../../../';
 import { shouldSkipAuthRouteRules } from '../../internal/auth-route-rules';
 import type { AuthMeta, AuthMode, AuthRouteRules } from '../../types';
@@ -25,13 +26,21 @@ let routeRulesMatcherPromise: Promise<ReturnType<
 > | null> | null = null;
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
+  // Nuxt App
+  const nuxtApp = useNuxtApp();
+  // Runtime config
+  const runtimeConfig = useRuntimeConfig();
+
+  const config = runtimeConfig.public.auth as
+    | ModuleOptionsNormalized
+    | undefined;
+
+  to.path = withoutBase(to.path, runtimeConfig.app.baseURL);
+
   if (shouldSkipAuthRouteRules(to.path)) return;
 
   // Skip if there are no matched routes
   if (!to.matched?.length) return;
-
-  // Nuxt App
-  const nuxtApp = useNuxtApp();
 
   // Runtime fallback: resolve auth from module-known route rules if not set at build-time.
   // This covers dynamic/404 paths where build-time page matching is not enough.
@@ -54,10 +63,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       }
     }
   }
-
-  const config = useRuntimeConfig().public.auth as
-    | ModuleOptionsNormalized
-    | undefined;
 
   const auth = to.meta.auth as AuthMeta | undefined;
 
@@ -104,6 +109,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       route: to,
       loginTarget: redirectTo ?? config?.redirects?.login ?? '/login',
       config,
+      baseURL: runtimeConfig.app.baseURL,
     });
     return resolved?.external
       ? navigateTo(resolved.to, { external: true })
@@ -124,8 +130,9 @@ function resolveLoginRedirect(input: {
     ModuleOptionsNormalized,
     'preserveRedirect' | 'redirectQueryKey'
   >;
+  baseURL: string;
 }): { to: Parameters<typeof navigateTo>[0]; external: boolean } {
-  const { route, loginTarget, config } = input;
+  const { route, loginTarget, config, baseURL } = input;
 
   const preserveRedirect = config?.preserveRedirect ?? true;
   const redirectQueryKey = config?.redirectQueryKey ?? 'redirect';

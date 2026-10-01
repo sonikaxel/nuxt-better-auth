@@ -1,13 +1,9 @@
-import type { Ref } from 'vue';
-import type {
-  AppAuthClient,
-  ClientAuthUser,
-  AuthUser,
-  ClientAuthSession,
-} from '#auth';
-import { parseJSON } from 'better-auth/client';
+import type { AppAuthClient, ClientAuthSession, ClientAuthUser } from '#auth';
 import { useRequestFetch, useRequestHeaders } from '#imports';
+import { parseJSON } from 'better-auth/client';
+import type { Ref } from 'vue';
 import { normalizeAuthActionError } from './auth-action-error';
+import { getAPISessionPath } from './path';
 
 interface SessionResponse {
   session: ClientAuthSession & { token?: string };
@@ -56,14 +52,12 @@ export async function fetchSessionServer(
   try {
     const headers = options.headers || useRequestHeaders(['cookie']);
     const requestFetch = useRequestFetch();
-    const data = await requestFetch<SessionResponse | null>(
-      '/api/auth/get-session',
-      {
-        headers,
-        parseResponse: parseJSON,
-        ...(options.force ? { query: { disableCookieCache: true } } : {}),
-      },
-    );
+    const sessionApiPath = getAPISessionPath();
+    const data = await requestFetch<SessionResponse | null>(sessionApiPath, {
+      headers,
+      parseResponse: parseJSON,
+      ...(options.force ? { query: { disableCookieCache: true } } : {}),
+    });
 
     if (data?.session && data?.user) {
       session.value = stripToken(data.session);
