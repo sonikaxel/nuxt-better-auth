@@ -4,7 +4,7 @@ const credentials = ref({
   password: 'password',
 });
 
-const signIn = useSignIn();
+const { signIn, loading } = useSignIn();
 
 const handleLogin = async (e: Event) => {
   await signIn('email', {
@@ -23,6 +23,7 @@ const handleLogin = async (e: Event) => {
 <template>
   <h3>Login</h3>
 
+  <div v-if="loading">Loading...</div>
   <form action="" @submit.prevent="handleLogin">
     <div>
       <label>
@@ -39,7 +40,7 @@ const handleLogin = async (e: Event) => {
     </div>
 
     <div>
-      <button type="submit">Login</button>
+      <button type="submit" :disabled="loading">Login</button>
     </div>
   </form>
 </template>

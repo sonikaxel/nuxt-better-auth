@@ -114,6 +114,10 @@ export default defineNuxtModule<ModuleOptions>({
           from: resolve('./runtime/app/composables/useSignIn'),
           name: 'useSignIn',
         },
+        {
+          from: resolve('./runtime/app/composables/useSignUp'),
+          name: 'useSignUp',
+        },
       ]);
 
       addRouteMiddleware({

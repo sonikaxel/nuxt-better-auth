@@ -5,20 +5,16 @@ const credentials = ref({
   password: 'Password@1',
 });
 
-const { client } = useUserSession();
+const { signUp, loading } = useSignUp();
 
 const handleSignUp = async (e: Event) => {
-  const { error } = await client.signUp.email({
+  await signUp('email', {
     ...credentials.value,
+    callbackURL: '/',
+    onError: (error) => {
+      alert(error.message);
+    },
   });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  // await fetchSession();
-  await navigateTo('/');
 };
 </script>
 
@@ -48,7 +44,7 @@ const handleSignUp = async (e: Event) => {
     </div>
 
     <div>
-      <button type="submit">SignUp</button>
+      <button type="submit" :disabled="loading">SignUp</button>
     </div>
   </form>
 </template>

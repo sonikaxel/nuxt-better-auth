@@ -12,23 +12,23 @@ type Interceptor<T = unknown> = {
 
 type ParamWithInterceptor<P, T = unknown> = P & Interceptor<T>;
 
-type SignIn = AppAuthClient['signIn'];
-type SignInMethod = keyof SignIn;
+type SignUp = AppAuthClient['signUp'];
+type SignUpMethod = keyof SignUp;
 
-type SignInData<
-  M extends SignInMethod,
-  P extends Parameters<SignIn[M]>[0],
+type SignUpData<
+  M extends SignUpMethod,
+  P extends Parameters<SignUp[M]>[0],
 > = ParamWithInterceptor<P, ClientAuthUserSession | null>;
 
-let _signInPromise: Promise<void> | null = null;
+let _signUpPromise: Promise<void> | null = null;
 
-export const useSignIn = () => {
+export const useSignUp = () => {
   const client = useAuthClient();
   const { user, session, fetchSession } = useUserSession();
   const route = useRoute();
   const { redirectQueryKey } = useRuntimeConfig().public.auth;
 
-  const signInProgress = useState('auth:sign-in-progress', () => false);
+  const signUpProgress = useState('auth:sign-up-in-progress', () => false);
   const loading = shallowRef(false);
   const error = shallowRef<AuthActionError>();
   const data = computed<ClientAuthUserSession | null>(() =>
@@ -40,25 +40,25 @@ export const useSignIn = () => {
       : null,
   );
 
-  async function signInFn<
-    M extends SignInMethod,
-    P extends Parameters<SignIn[M]>[0],
-  >(method: M, data: SignInData<M, P>) {
+  async function signUpFn<
+    M extends SignUpMethod,
+    P extends Parameters<SignUp[M]>[0],
+  >(method: M, data: SignUpData<M, P>) {
     if (!import.meta.client)
       throw new Error('signIn can only be called on client-side');
 
-    if (_signInPromise) {
-      await _signInPromise;
+    if (_signUpPromise) {
+      await _signUpPromise;
       return;
     }
 
-    _signInPromise = (async () => {
-      signInProgress.value = true;
+    _signUpPromise = (async () => {
+      signUpProgress.value = true;
 
       try {
         const { callbackURL, onSuccess, onError, ...restData } = data;
 
-        const handler = client!.signIn[method] as (
+        const handler = client.signUp[method] as (
           req: Record<string, unknown>,
         ) => Promise<{
           data: any;
@@ -68,6 +68,8 @@ export const useSignIn = () => {
         // Invoke sign-in
         const response = await handler(restData);
 
+        // Fetch Session after sign-in
+        await fetchSession({ force: true });
         await nextTick();
 
         // User Session, null if no user or session
@@ -80,7 +82,7 @@ export const useSignIn = () => {
           null;
 
         // Error handling
-        if (response.error) {
+        if (response.error || !userSession) {
           // Normalized error
           const error = normalizeAuthActionError(response.error);
 
@@ -92,15 +94,7 @@ export const useSignIn = () => {
           throw new Error(error.message);
         }
 
-        const redirectQuery = route.query[redirectQueryKey];
-        let redirect: string | undefined = undefined;
-
-        // Set redirect if callbackURL or redirectQuery is present
-        if (typeof redirectQuery === 'string' && redirectQuery) {
-          redirect = redirectQuery;
-        } else if (callbackURL) {
-          redirect = callbackURL;
-        }
+        let redirect: string | undefined = callbackURL ?? undefined;
 
         // invoke onSuccess interceptor, if present
         if (onSuccess) {
@@ -109,26 +103,26 @@ export const useSignIn = () => {
 
         redirect && (await navigateTo(redirect));
       } finally {
-        signInProgress.value = false;
+        signUpProgress.value = false;
       }
     })().finally(() => {
-      _signInPromise = null;
+      _signUpPromise = null;
     });
 
-    await _signInPromise;
+    await _signUpPromise;
   }
 
-  const signIn = async <
-    M extends SignInMethod,
-    P extends Parameters<SignIn[M]>[0],
+  const signUp = async <
+    M extends SignUpMethod,
+    P extends Parameters<SignUp[M]>[0],
   >(
     method: M,
-    data: SignInData<M, P>,
+    data: SignUpData<M, P>,
   ) => {
     try {
       error.value = undefined;
       loading.value = true;
-      await signInFn<M, P>(method, data);
+      await signUpFn<M, P>(method, data);
     } catch (e) {
       const _error = normalizeAuthActionError(e);
       error.value = _error;
@@ -138,7 +132,7 @@ export const useSignIn = () => {
   };
 
   return {
-    signIn,
+    signUp,
     data,
     loading: computed(() => loading.value),
     error: computed(() => error.value),
