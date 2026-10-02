@@ -7,7 +7,12 @@ import {
   useState,
   watch,
 } from '#imports';
-import type { ClientAuthSession, ClientAuthUser } from '../../types';
+import type {
+  AppAuthClient,
+  AuthUserUpdateInput,
+  ClientAuthSession,
+  ClientAuthUser,
+} from '../../types';
 import {
   isRecord,
   normalizeAuthActionError,
@@ -304,6 +309,40 @@ export function useUserSession() {
     signOut,
     waitForSession,
     fetchSession,
+    updateUser: _updateUser(user, authClient),
     client: authClient,
+  };
+}
+
+function _updateUser(user: Ref<ClientAuthUser | null>, client: AppAuthClient) {
+  return async (updates: AuthUserUpdateInput) => {
+    if (!import.meta.client)
+      throw new Error('updateUser can only be called on client-side');
+
+    if (!user.value) return;
+
+    const previousUser = user.value;
+
+    user.value = { ...user.value, ...updates };
+
+    try {
+      const result = await client.updateUser(updates);
+
+      if (result?.error) {
+        if (result.error instanceof Error) {
+          throw result.error;
+        }
+
+        const normalizedError = normalizeAuthActionError(result.error);
+        throw new Error(normalizedError.message);
+      }
+    } catch (error) {
+      user.value = previousUser;
+      if (!(error instanceof Error)) {
+        const normalizedError = normalizeAuthActionError(error);
+        throw new Error(normalizedError.message);
+      }
+      throw error;
+    }
   };
 }

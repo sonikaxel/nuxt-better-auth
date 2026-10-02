@@ -1,4 +1,4 @@
-import type { BetterAuthError, RawError } from 'better-auth';
+import type { RawError } from 'better-auth';
 import type { AppAuthClient, ClientAuthUserSession } from '../../types';
 import {
   normalizeAuthActionError,
@@ -12,6 +12,14 @@ type Interceptor<T = unknown> = {
 
 type ParamWithInterceptor<P, T = unknown> = P & Interceptor<T>;
 
+type SignIn = AppAuthClient['signIn'];
+type LoginMethod = keyof SignIn;
+
+type SignInData<
+  M extends LoginMethod,
+  P extends Parameters<SignIn[M]>[0],
+> = ParamWithInterceptor<P, ClientAuthUserSession>;
+
 let _signInPromise: Promise<void> | null = null;
 
 export const useSignIn = () => {
@@ -22,13 +30,10 @@ export const useSignIn = () => {
 
   const signInProgress = useState('auth:sign-in-progress', () => false);
 
-  type SignIn = AppAuthClient['signIn'];
-  type LoginMethod = keyof SignIn;
-
   return async function signIn<
     M extends LoginMethod,
     P extends Parameters<SignIn[M]>[0],
-  >(method: M, data: ParamWithInterceptor<P, ClientAuthUserSession>) {
+  >(method: M, data: SignInData<M, P>) {
     if (!import.meta.client)
       throw new Error('signIn can only be called on client-side');
 

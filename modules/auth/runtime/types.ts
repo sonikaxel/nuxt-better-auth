@@ -1,6 +1,6 @@
 import authClientConfig from '#auth/client';
 import authServerConfig from '#auth/server';
-import type { Auth, BetterAuthOptions } from 'better-auth';
+import type { Auth } from 'better-auth';
 import type { VueAuthClient } from 'better-auth/vue';
 import type { UserMatch } from './utils/match-user';
 
@@ -51,3 +51,7 @@ export type AuthMeta =
 
 /** Auth Route Rules */
 export type AuthRouteRules = Record<string, unknown> & { auth?: AuthMeta };
+
+type UpdateUserFn = AppAuthClient['updateUser'];
+
+export type AuthUserUpdateInput = Parameters<UpdateUserFn>[0];
