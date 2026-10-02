@@ -9,13 +9,12 @@ const signIn = useSignIn();
 const handleLogin = async (e: Event) => {
   await signIn('email', {
     ...credentials.value,
+    callbackURL: '/',
     onError(error) {
       alert(error.message);
     },
-    onSuccess(data, redirecting) {
-      if (!redirecting) {
-        navigateTo('/');
-      }
+    onSuccess(data) {
+      console.log('Logged-in');
     },
   });
 };

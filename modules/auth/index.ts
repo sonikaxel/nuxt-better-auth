@@ -19,7 +19,7 @@ export type ModuleOptions = {
     login?: string;
     /** Navigate user on successful logout, default '/login' */
     logout?: string;
-    /** Redirect a guest user to */
+    /** Redirect a guest user to, default '/' */
     guest?: string;
   };
   /** Preserve Redirect when redirected by auth middleware, default `true` */

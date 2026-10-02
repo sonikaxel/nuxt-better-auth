@@ -1,18 +1,26 @@
 import type { BetterAuthError, RawError } from 'better-auth';
 import type { AppAuthClient, ClientAuthUserSession } from '../../types';
+import {
+  normalizeAuthActionError,
+  type AuthActionError,
+} from '../../utils/auth-action-error';
 
 type Interceptor<T = unknown> = {
-  onSuccess?: (data: T, redirecting?: boolean) => any;
-  onError?: (error: Partial<BetterAuthError>) => any;
+  onSuccess?: (data: T) => any;
+  onError?: (error: AuthActionError) => any;
 };
 
 type ParamWithInterceptor<P, T = unknown> = P & Interceptor<T>;
+
+let _signInPromise: Promise<void> | null = null;
 
 export const useSignIn = () => {
   const client = useAuthClient();
   const { user, session, fetchSession } = useUserSession();
   const route = useRoute();
   const { redirectQueryKey } = useRuntimeConfig().public.auth;
+
+  const signInProgress = useState('auth:sign-in-progress', () => false);
 
   type SignIn = AppAuthClient['signIn'];
   type LoginMethod = keyof SignIn;
@@ -24,49 +32,77 @@ export const useSignIn = () => {
     if (!import.meta.client)
       throw new Error('signIn can only be called on client-side');
 
-    const { callbackURL, onSuccess, onError, ...restData } = data;
-
-    const handler = client!.signIn[method] as (
-      req: Record<string, unknown>,
-    ) => Promise<{
-      data: any;
-      error: Partial<RawError> | null;
-    }>;
-
-    const response = await handler(restData);
-
-    await fetchSession({ force: true });
-    await nextTick();
-
-    const userSession =
-      (user.value &&
-        session.value && {
-          user: user.value,
-          session: session.value,
-        }) ||
-      null;
-
-    if (onError && response.error) {
-      await onError(response.error);
+    if (_signInPromise) {
+      await _signInPromise;
       return;
     }
 
-    const redirect = route.query[redirectQueryKey];
+    _signInPromise = (async () => {
+      signInProgress.value = true;
 
-    if (onSuccess && !response.error && userSession) {
-      const redirecting =
-        (typeof redirect === 'string' && !!redirect) || !!callbackURL;
-      await onSuccess(userSession, redirecting);
-    }
+      try {
+        const { callbackURL, onSuccess, onError, ...restData } = data;
 
-    if (userSession && callbackURL) {
-      await navigateTo(callbackURL);
-      return;
-    }
+        const handler = client!.signIn[method] as (
+          req: Record<string, unknown>,
+        ) => Promise<{
+          data: any;
+          error: Partial<RawError> | null;
+        }>;
 
-    if (userSession && typeof redirect === 'string' && redirect) {
-      await navigateTo(redirect);
-      return;
-    }
+        // Invoke sign-in
+        const response = await handler(restData);
+
+        // Fetch Session after sign-in
+        await fetchSession({ force: true });
+        await nextTick();
+
+        // User Session, null if no user or session
+        const userSession =
+          (user.value &&
+            session.value && {
+              user: user.value,
+              session: session.value,
+            }) ||
+          null;
+
+        // Error handling
+        if (response.error || !userSession) {
+          // Normalized error
+          const error = normalizeAuthActionError(response.error);
+
+          // prioritize onError interseptor
+          if (onError) {
+            await onError(error);
+            return;
+          }
+          // Throw fallback error
+          throw new Error(error.message);
+        }
+
+        const redirectQuery = route.query[redirectQueryKey];
+        let redirect: string | undefined = undefined;
+
+        // Set redirect if callbackURL or redirectQuery is present
+        if (typeof redirectQuery === 'string' && redirectQuery) {
+          redirect = redirectQuery;
+        } else if (callbackURL) {
+          redirect = callbackURL;
+        }
+
+        // invoke onSuccess interceptor, if present
+        if (onSuccess) {
+          await onSuccess(userSession);
+        }
+
+        redirect && (await navigateTo(redirect));
+      } finally {
+        signInProgress.value = false;
+      }
+    })().finally(() => {
+      _signInPromise = null;
+    });
+
+    await _signInPromise;
   };
 };
