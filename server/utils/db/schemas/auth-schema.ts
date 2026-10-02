@@ -54,7 +54,7 @@ export const account = pgTable(
   'account',
   {
     id: uuid('id').primaryKey(),
-    accountId: text('account_id').notNull(),
+    accountId: uuid('account_id').notNull(),
     providerId: text('provider_id').notNull(),
     userId: uuid('user_id')
       .notNull()
