@@ -21,6 +21,9 @@ export const useSignIn = () => {
     M extends LoginMethod,
     P extends Parameters<SignIn[M]>[0],
   >(method: M, data: ParamWithInterceptor<P, ClientAuthUserSession>) {
+    if (!import.meta.client)
+      throw new Error('signIn can only be called on client-side');
+
     const { callbackURL, onSuccess, onError, ...restData } = data;
 
     const handler = client!.signIn[method] as (
@@ -45,6 +48,7 @@ export const useSignIn = () => {
 
     if (onError && response.error) {
       await onError(response.error);
+      return;
     }
 
     const redirect = route.query[redirectQueryKey];
@@ -56,13 +60,13 @@ export const useSignIn = () => {
     }
 
     if (userSession && callbackURL) {
-      navigateTo(callbackURL);
+      await navigateTo(callbackURL);
+      return;
     }
 
     if (userSession && typeof redirect === 'string' && redirect) {
-      navigateTo(redirect);
+      await navigateTo(redirect);
+      return;
     }
-
-    return userSession;
   };
 };
