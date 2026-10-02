@@ -1,16 +1,14 @@
 import type { RawError } from 'better-auth';
-import type { AppAuthClient, ClientAuthUserSession } from '../../types';
+import type {
+  AppAuthClient,
+  ClientAuthUser,
+  ClientAuthUserSession,
+} from '../../types';
 import {
   normalizeAuthActionError,
   type AuthActionError,
 } from '../../utils/auth-action-error';
-
-type Interceptor<T = unknown> = {
-  onSuccess?: (data: T) => any;
-  onError?: (error: AuthActionError) => any;
-};
-
-type ParamWithInterceptor<P, T = unknown> = P & Interceptor<T>;
+import type { ParamWithInterceptor } from '../types';
 
 type SignUp = AppAuthClient['signUp'];
 type SignUpMethod = keyof SignUp;
@@ -18,15 +16,13 @@ type SignUpMethod = keyof SignUp;
 type SignUpData<
   M extends SignUpMethod,
   P extends Parameters<SignUp[M]>[0],
-> = ParamWithInterceptor<P, ClientAuthUserSession | null>;
+> = ParamWithInterceptor<P, ClientAuthUser | null>;
 
 let _signUpPromise: Promise<void> | null = null;
 
 export const useSignUp = () => {
   const client = useAuthClient();
-  const { user, session, fetchSession } = useUserSession();
-  const route = useRoute();
-  const { redirectQueryKey } = useRuntimeConfig().public.auth;
+  const { user, session } = useUserSession();
 
   const signUpProgress = useState('auth:sign-up-in-progress', () => false);
   const loading = shallowRef(false);
@@ -67,9 +63,6 @@ export const useSignUp = () => {
 
         // Invoke sign-in
         const response = await handler(restData);
-
-        // Fetch Session after sign-in
-        await fetchSession({ force: true });
         await nextTick();
 
         // User Session, null if no user or session
@@ -96,9 +89,12 @@ export const useSignUp = () => {
 
         let redirect: string | undefined = callbackURL ?? undefined;
 
+        const loggedInUser =
+          (response.data as { user?: ClientAuthUser })?.user ?? null;
+
         // invoke onSuccess interceptor, if present
         if (onSuccess) {
-          await onSuccess(userSession);
+          await onSuccess(loggedInUser);
         }
 
         redirect && (await navigateTo(redirect));

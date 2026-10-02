@@ -1,16 +1,14 @@
-import type { RawError } from 'better-auth';
-import type { AppAuthClient, ClientAuthUserSession } from '../../types';
+import { type RawError } from 'better-auth';
+import type {
+  AppAuthClient,
+  ClientAuthUser,
+  ClientAuthUserSession,
+} from '../../types';
 import {
   normalizeAuthActionError,
   type AuthActionError,
 } from '../../utils/auth-action-error';
-
-type Interceptor<T = unknown> = {
-  onSuccess?: (data: T) => any;
-  onError?: (error: AuthActionError) => any;
-};
-
-type ParamWithInterceptor<P, T = unknown> = P & Interceptor<T>;
+import type { ParamWithInterceptor } from '../types';
 
 type SignIn = AppAuthClient['signIn'];
 type SignInMethod = keyof SignIn;
@@ -18,13 +16,13 @@ type SignInMethod = keyof SignIn;
 type SignInData<
   M extends SignInMethod,
   P extends Parameters<SignIn[M]>[0],
-> = ParamWithInterceptor<P, ClientAuthUserSession | null>;
+> = ParamWithInterceptor<P, ClientAuthUser | null>;
 
 let _signInPromise: Promise<void> | null = null;
 
 export const useSignIn = () => {
   const client = useAuthClient();
-  const { user, session, fetchSession } = useUserSession();
+  const { user, session } = useUserSession();
   const route = useRoute();
   const { redirectQueryKey } = useRuntimeConfig().public.auth;
 
@@ -102,9 +100,12 @@ export const useSignIn = () => {
           redirect = callbackURL;
         }
 
+        const loggedInUser =
+          (response.data as { user?: ClientAuthUser })?.user ?? null;
+
         // invoke onSuccess interceptor, if present
         if (onSuccess) {
-          await onSuccess(userSession);
+          await onSuccess(loggedInUser);
         }
 
         redirect && (await navigateTo(redirect));
