@@ -3,4 +3,4 @@ import type { BetterAuthClientOptions } from 'better-auth';
 
 export default {
   plugins: [adminClient(), usernameClient()],
-} as const satisfies Omit<BetterAuthClientOptions, 'baseURL' | 'basePath'>;
+} satisfies Omit<BetterAuthClientOptions, 'baseURL' | 'basePath'>;

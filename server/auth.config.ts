@@ -28,4 +28,4 @@ export default {
       maxAge: 60 * 5,
     },
   },
-} as const satisfies Omit<BetterAuthOptions, 'basePath'>;
+} satisfies Omit<BetterAuthOptions, 'basePath'>;
