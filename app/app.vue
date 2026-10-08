@@ -40,6 +40,7 @@ const { user, session, fetchSession, loggedIn } = useUserSession();
     <div :style="{ overflow: 'auto' }">
       <pre>User: {{ user }}</pre>
       <pre>Session: {{ session }}</pre>
+      <pre>Can: {{ can(user, ['list:project']) }}</pre>
     </div>
 
     <NuxtPage />

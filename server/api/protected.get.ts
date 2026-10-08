@@ -3,5 +3,5 @@ export default defineEventHandler(async (event) => {
     rule: ({ user }) => user.emailVerified === true,
   });
 
-  return { user, session };
+  return { user, session, can: can(user, ['ban:user']) };
 });
