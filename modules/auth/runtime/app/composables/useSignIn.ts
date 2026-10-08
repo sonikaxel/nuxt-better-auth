@@ -68,15 +68,6 @@ export const useSignIn = () => {
 
         await nextTick();
 
-        // User Session, null if no user or session
-        const userSession =
-          (user.value &&
-            session.value && {
-              user: user.value,
-              session: session.value,
-            }) ||
-          null;
-
         // Error handling
         if (response.error) {
           // Normalized error
