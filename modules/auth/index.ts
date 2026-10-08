@@ -17,7 +17,7 @@ export type ModuleOptions = {
   redirects?: {
     /** Login page route, default '/login' */
     login?: string;
-    /** Navigate user on successful logout, default '/login' */
+    /** Navigate user on successful logout, default no redirect */
     logout?: string;
     /** Redirect a guest user to, default '/' */
     guest?: string;
@@ -52,7 +52,11 @@ export default defineNuxtModule<ModuleOptions>({
 
       const moduleOptions = normalizeOptions(options);
 
-      nuxt.options.runtimeConfig.public.auth ??= moduleOptions;
+      (nuxt.options.runtimeConfig.public.auth as unknown) ??= {};
+      nuxt.options.runtimeConfig.public.auth = {
+        ...moduleOptions,
+        ...nuxt.options.runtimeConfig.public.auth,
+      };
 
       const routeRulesTypeFilePath = resolve('./runtime/types');
 
@@ -152,7 +156,7 @@ export default defineNuxtModule<ModuleOptions>({
 export type ModuleOptionsNormalized = {
   redirects: {
     login: string;
-    logout: string;
+    logout?: string;
     guest: string;
   };
   /** Preserve Redirect when redirected by auth middleware, default `true` */
@@ -166,7 +170,7 @@ function normalizeOptions(options: ModuleOptions): ModuleOptionsNormalized {
     ...options,
     redirects: {
       login: options?.redirects?.login ?? '/login',
-      logout: options?.redirects?.logout ?? '/login',
+      logout: options?.redirects?.logout,
       guest: options?.redirects?.guest ?? '/',
     },
     redirectQueryKey: 'redirect',
