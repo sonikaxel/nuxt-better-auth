@@ -5,7 +5,7 @@ import { ac, roles as betterAuthRoles } from './access';
 export const statement = {
   user: [...ac.statements.user, 'manage'],
   session: [...ac.statements.session, 'manage'],
-  project: ['create', 'list', 'delete', 'manage'],
+  project: ['create', 'list', 'delete', 'manage'], // Additional resource
 } as const;
 
 // Define Roles extending better-auth roles
